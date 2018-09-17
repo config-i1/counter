@@ -1,0 +1,6 @@
+counter v0.1.0 (Release data: 2018-09-17)
+==============
+
+Changes:
+* Initial release. NegBin and HSP.
+* pls, print and plot methods.

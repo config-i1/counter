@@ -154,21 +154,3 @@ hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
 
     return(structure(model, class="counter"));
 }
-
-#' @importFrom greybox graphmaker
-plot.counter <- function(x, ...){
-    if(any(!is.na(c(x$lower,x$upper)))){
-        graphmaker(x$actuals, x$forecast, x$fitted, x$lower, x$upper, x$level, ...);
-    }
-    else{
-        graphmaker(x$actuals, x$forecast, x$fitted, ...);
-    }
-}
-
-print.counter <- function(x, ...){
-    cat("The model constructed: "); cat(x$model);
-    if(any(!is.na(x$holdout))){
-        cat("\nAccuracy:\n");
-        print(x$accuracy[c("sMAE","sMSE","sCE","RelMAE","RelMSE","RelAME","sPIS")]);
-    }
-}
