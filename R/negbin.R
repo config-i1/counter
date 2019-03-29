@@ -96,7 +96,10 @@ negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     CF <- function(A){
         yFitted <- muFitter(A[1], A[2]);
         p <- A[3];
-        at <- yFitted * p / (1-p);
+        at <- yFitted;
+        if(p!=1){
+            at[] <- at * p / (1-p);
+        }
         
         CFValue <- -sum(dnbinom(y, at, p, log=TRUE));
         return(CFValue);
@@ -114,13 +117,11 @@ negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     
     p <- A[3];
     yFitted <- muFitter(A[1], A[2]);
-    at <- yFitted * p / (1-p);
+    at <- yFitted;
+    if(p!=1){
+        at[] <- at * p / (1-p);
+    }
     atForecast[] <- at[length(at)];
-    
-    # for(i in 1:obsInsample){
-    #     ySimulated <- rnbinom(10000,at[i],p);
-    #     yFitted[i] <- mean(ySimulated);
-    # }
     
     for(i in 1:h){
         ySimulated <- rnbinom(10000,atForecast[i],p);
