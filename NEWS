@@ -1,5 +1,8 @@
-counter v0.2.0 (Release data: 2019-03-29)
+counter v0.2.0 (Release data: 2019-04-20)
 ==============
+
+Changes:
+* We now depend on greybox directly, importing measures() function from it.
 
 Bugfixes:
 * A bug fixed, when negbin would not work with the probability equal to 1.

@@ -136,7 +136,7 @@ negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     
     if(holdout){
         yHoldout <- ts(data[(obsInsample+1):obsAll],start=yHoldoutStart,frequency=datafreq);
-        errormeasures <- Accuracy(yHoldout,yForecast,y,digits=5)
+        errormeasures <- measures(yHoldout,yForecast,y,digits=5)
     }
     else{
         yHoldout <- NA;

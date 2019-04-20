@@ -44,7 +44,8 @@
 #' y <- c(rpois(50,0.3),rpois(50,0.8))
 #' test <- hsp(y)
 #'
-#' @importFrom smooth es Accuracy
+#' @importFrom greybox measures
+#' @importFrom smooth es 
 #' @export hsp
 hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     
@@ -136,7 +137,7 @@ hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     if(holdout){
         yHoldout <- ts(data[(obsInsample+1):obsAll],start=yHoldoutStart,frequency=datafreq);
         otHoldout <- yHoldout!=0;
-        errormeasures <- Accuracy(yHoldout,pForecast*yForecast,y,digits=5)
+        errormeasures <- measures(yHoldout,pForecast*yForecast,y,digits=5)
     }
     else{
         yHoldout <- NA;
