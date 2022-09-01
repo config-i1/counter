@@ -5,11 +5,14 @@
 #' HSP model consists of two parts: Simple Exponential Smoothing for demand intervals
 #' and the same method for the mean demand sizes (lambda parameter in Poisson distribution).
 #'
-#' @param data the vector of values (time sereis vector).
+#' @param data the vector of values (time series vector).
 #' @param h forecasting horizon.
-#' @param intervals binary, definign whether to construct prediction intervals or not.
+#' @param intervals binary, defining whether to construct prediction intervals or not.
 #' @param level confidence level for prediction intervals.
 #' @param holdout whether to use holdout of h observations or not.
+#' @param cumulative if \code{TRUE}, cumulative values are produced.
+#' @param side defines, whether to provide \code{"both"} sides of prediction
+#' interval or only \code{"upper"}, or \code{"lower"}.
 #'
 #' @return Function returns a model of a class "counter", which contains:
 #' \itemize{
@@ -38,16 +41,19 @@
 #' 
 #' @keywords ts models
 #' 
-#' @seealso \code{\link[counter]{negbin}, \link[smooth]{es}, \link[smooth]{iss}}
+#' @seealso \code{\link[counter]{negbin}, \link[smooth]{adam}}
 #'
 #' @examples
 #' y <- c(rpois(50,0.3),rpois(50,0.8))
 #' test <- hsp(y)
 #'
 #' @importFrom greybox measures
-#' @importFrom smooth es 
+#' @importFrom smooth es
 #' @export hsp
-hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
+hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE,
+                cumulative=FALSE, side=c("both","upper","lower")){
+    
+    side <- match.arg(side);
     
     # Define obs, the number of observations of in-sample
     obsInsample <- length(data) - holdout*h;
@@ -115,21 +121,54 @@ hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     
     yFitted <- lambdaFitted * pFitted;
     
-    yForecast <- yUpper <- yLower <- rep(NA,h);
-    levels <- level - (1 - pForecast);
+    if(cumulative){
+        hFinal <- 1;
+    }
+    else{
+        hFinal <- h;
+    }
+    
+    yForecast <- yUpper <- yLower <- rep(NA,hFinal);
+    levelLow <- levelUp <- levelNew <- level;
+    levelNew[] <- (levelNew-(1 - pForecast[1]))/pForecast[1];
+    levelNew[levelNew<0] <- 0;
+    
+    if(side=="both"){
+        levelLow[] <- (1-levelNew)/2;
+        levelUp[] <- (1+levelNew)/2;
+    }
+    else if(side=="upper"){
+        levelLow[] <- 0;
+        levelUp[] <- levelNew;
+    }
+    else{
+        levelLow[] <- 1-levelNew;
+        levelUp[] <- 1;
+    }
+    levelLow[levelLow<0] <- 0;
+    levelUp[levelUp<0] <- 0;
+    
+    nsim <- 100000;
+    ySimulated <- matrix(NA, nsim, h);
     
     for(i in 1:h){
-        ySimulated <- rpois(100000,lambdaForecast[i]-1)+1;
+        ySimulated[,i] <- rpois(100000,lambdaForecast[i]-1)+1;
+    }
+    
+    if(cumulative){
+        pForecast <- pForecast[1];
         if(intervals){
-            yUpper[i] <- quantile(ySimulated,(1+levels[i])/2);
-            if(pForecast[i]==1){
-                yLower[i] <- quantile(ySimulated,(1-levels[i])/2);
-            }
-            else{
-                yLower[i] <- 0;
-            }
+            yUpper[] <- quantile(rowSums(ySimulated),probs=levelLow);
+            yLower[] <- ifelse(pForecast[1]==1,quantile(rowSums(ySimulated),probs=levelUp),0);
         }
-        yForecast[i] <- mean(ySimulated);
+        yForecast[] <- mean(rowSums(ySimulated));
+    }
+    else{
+        if(intervals){
+            yUpper[] <- apply(ySimulated,2,quantile,probs=levelLow);
+            yLower[] <- ifelse(pForecast[1]==1,apply(ySimulated,2,quantile,probs=levelUp),0);
+        }
+        yForecast[] <- apply(ySimulated,2,mean);
     }
     
     yHoldoutStart <- time(data)[obsInsample]+deltat(data);

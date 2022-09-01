@@ -1,3 +1,10 @@
+counter v0.3.0 (Release data: 2022-09-01)
+==============
+
+Changes:
+* Cumulative values and different sides of interval (upper/lower/both)
+
+
 counter v0.2.0 (Release data: 2019-04-20)
 ==============
 

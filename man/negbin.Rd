@@ -4,19 +4,31 @@
 \alias{negbin}
 \title{Dynamic Negative Binomial model}
 \usage{
-negbin(data, h = 10, intervals = TRUE, level = 0.95,
-  holdout = FALSE)
+negbin(
+  data,
+  h = 10,
+  intervals = TRUE,
+  level = 0.95,
+  holdout = FALSE,
+  cumulative = FALSE,
+  side = c("both", "upper", "lower")
+)
 }
 \arguments{
-\item{data}{the vector of values (time sereis vector).}
+\item{data}{the vector of values (time series vector).}
 
 \item{h}{forecasting horizon.}
 
-\item{intervals}{binary, definign whether to construct prediction intervals or not.}
+\item{intervals}{binary, defining whether to construct prediction intervals or not.}
 
 \item{level}{confidence level for prediction intervals.}
 
 \item{holdout}{whether to use holdout of h observations or not.}
+
+\item{cumulative}{if \code{TRUE}, cumulative values are produced.}
+
+\item{side}{defines, whether to provide \code{"both"} sides of prediction
+interval or only \code{"upper"}, or \code{"lower"}.}
 }
 \value{
 Function returns a model of a class "counter", which contains:
@@ -31,7 +43,7 @@ Function returns a model of a class "counter", which contains:
 \item actuals - the provided actual values,
 \item holdout - the actual values from the holdout (if holdout was set to TRUE),
 \item level - confidence level used,
-\item probabilty - the probability of success,
+\item probability - the probability of success,
 \item dispersion - the dispersion variable,
 \item alpha - smoothing parameter of the model,
 \item initial - the initial value for the time varying mean,
@@ -42,7 +54,7 @@ Function returns a model of a class "counter", which contains:
 Construct NegBin model on time series data
 }
 \details{
-The model constructs Negative Binomial model parameterised over the mean and
+The model constructs Negative Binomial model parametrised over the mean and
 dispersion parameter using Simple Exponential Smoothing.
 }
 \examples{
@@ -59,7 +71,7 @@ https://doi.org/10.1016/j.ijforecast.2011.03.009
 }
 }
 \seealso{
-\code{\link[counter]{hsp}, \link[smooth]{es}, \link[smooth]{iss}}
+\code{\link[counter]{hsp}, \link[smooth]{adam}}
 }
 \author{
 Ivan Svetunkov, \email{ivan@svetunkov.ru}

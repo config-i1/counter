@@ -2,14 +2,17 @@
 #'
 #' Construct NegBin model on time series data
 #'
-#' The model constructs Negative Binomial model parameterised over the mean and
+#' The model constructs Negative Binomial model parametrised over the mean and
 #' dispersion parameter using Simple Exponential Smoothing.
 #'
-#' @param data the vector of values (time sereis vector).
+#' @param data the vector of values (time series vector).
 #' @param h forecasting horizon.
-#' @param intervals binary, definign whether to construct prediction intervals or not.
+#' @param intervals binary, defining whether to construct prediction intervals or not.
 #' @param level confidence level for prediction intervals.
 #' @param holdout whether to use holdout of h observations or not.
+#' @param cumulative if \code{TRUE}, cumulative values are produced.
+#' @param side defines, whether to provide \code{"both"} sides of prediction
+#' interval or only \code{"upper"}, or \code{"lower"}.
 #'
 #' @return Function returns a model of a class "counter", which contains:
 #' \itemize{
@@ -23,7 +26,7 @@
 #' \item actuals - the provided actual values,
 #' \item holdout - the actual values from the holdout (if holdout was set to TRUE),
 #' \item level - confidence level used,
-#' \item probabilty - the probability of success,
+#' \item probability - the probability of success,
 #' \item dispersion - the dispersion variable,
 #' \item alpha - smoothing parameter of the model,
 #' \item initial - the initial value for the time varying mean,
@@ -42,7 +45,7 @@
 #' 
 #' @keywords ts models
 #' 
-#' @seealso \code{\link[counter]{hsp}, \link[smooth]{es}, \link[smooth]{iss}}
+#' @seealso \code{\link[counter]{hsp}, \link[smooth]{adam}}
 #'
 #' @examples
 #' y <- c(rpois(50,0.3),rpois(50,0.8))
@@ -51,7 +54,10 @@
 #' @importFrom nloptr nloptr
 #' @importFrom stats deltat dnbinom frequency quantile rnbinom rpois start time ts
 #' @export negbin
-negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
+negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE,
+                   cumulative=FALSE, side=c("both","upper","lower")){
+    
+    side <- match.arg(side);
     
     # This function constructs Negative Binomial model proposed in Snyder et al.(2012).
     #
@@ -83,7 +89,15 @@ negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     datafreq <- frequency(data);
     
     at <- yFitted <- rep(NA,obsInsample);
-    yForecast <- yUpper <- yLower <- atForecast <- rep(NA,h);
+    
+    if(cumulative){
+        hFinal <- 1;
+    }
+    else{
+        hFinal <- h;
+    }
+    yForecast <- yUpper <- yLower <- rep(NA,hFinal);
+    atForecast <- rep(NA,h);
     
     muFitter <- function(mu0, alpha){
         yFitted[1] <- mu0;
@@ -123,13 +137,42 @@ negbin <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE){
     }
     atForecast[] <- at[length(at)];
     
+    levelLow <- levelUp <- levelNew <- level;
+    if(side=="both"){
+        levelLow[] <- (1-levelNew)/2;
+        levelUp[] <- (1+levelNew)/2;
+    }
+    else if(side=="upper"){
+        levelLow[] <- 0;
+        levelUp[] <- levelNew;
+    }
+    else{
+        levelLow[] <- 1-levelNew;
+        levelUp[] <- 1;
+    }
+    levelLow[levelLow<0] <- 0;
+    levelUp[levelUp<0] <- 0;
+    
+    nsim <- 100000;
+    ySimulated <- matrix(NA, nsim, h);
+    
     for(i in 1:h){
-        ySimulated <- rnbinom(10000,atForecast[i],p);
-        yForecast[i] <- mean(ySimulated);
+        ySimulated[,i] <- rnbinom(10000,atForecast[i],p);
+    }
+    
+    if(cumulative){
         if(intervals){
-            yUpper[i] <- quantile(ySimulated,(1+level)/2);
-            yLower[i] <- quantile(ySimulated,(1-level)/2);
+            yUpper[] <- quantile(rowSums(ySimulated),probs=levelUp);
+            yLower[] <- quantile(rowSums(ySimulated),probs=levelLow);
         }
+        yForecast[] <- mean(rowSums(ySimulated));
+    }
+    else{
+        if(intervals){
+            yUpper[] <- apply(ySimulated,2,quantile,probs=levelUp);
+            yLower[] <- apply(ySimulated,2,quantile,probs=levelLow);
+        }
+        yForecast[] <- apply(ySimulated,2,mean);
     }
     
     yHoldoutStart <- time(data)[obsInsample]+deltat(data);

@@ -4,18 +4,31 @@
 \alias{hsp}
 \title{Hurdle Shifted Poisson model}
 \usage{
-hsp(data, h = 10, intervals = TRUE, level = 0.95, holdout = FALSE)
+hsp(
+  data,
+  h = 10,
+  intervals = TRUE,
+  level = 0.95,
+  holdout = FALSE,
+  cumulative = FALSE,
+  side = c("both", "upper", "lower")
+)
 }
 \arguments{
-\item{data}{the vector of values (time sereis vector).}
+\item{data}{the vector of values (time series vector).}
 
 \item{h}{forecasting horizon.}
 
-\item{intervals}{binary, definign whether to construct prediction intervals or not.}
+\item{intervals}{binary, defining whether to construct prediction intervals or not.}
 
 \item{level}{confidence level for prediction intervals.}
 
 \item{holdout}{whether to use holdout of h observations or not.}
+
+\item{cumulative}{if \code{TRUE}, cumulative values are produced.}
+
+\item{side}{defines, whether to provide \code{"both"} sides of prediction
+interval or only \code{"upper"}, or \code{"lower"}.}
 }
 \value{
 Function returns a model of a class "counter", which contains:
@@ -54,7 +67,7 @@ https://doi.org/10.1016/j.ijforecast.2011.03.009
 }
 }
 \seealso{
-\code{\link[counter]{negbin}, \link[smooth]{es}, \link[smooth]{iss}}
+\code{\link[counter]{negbin}, \link[smooth]{adam}}
 }
 \author{
 Ivan Svetunkov, \email{ivan@svetunkov.ru}
