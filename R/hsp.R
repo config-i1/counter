@@ -158,15 +158,15 @@ hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE,
     if(cumulative){
         pForecast <- pForecast[1];
         if(intervals){
-            yUpper[] <- quantile(rowSums(ySimulated),probs=levelLow);
-            yLower[] <- ifelse(pForecast[1]==1,quantile(rowSums(ySimulated),probs=levelUp),0);
+            yUpper[] <- quantile(rowSums(ySimulated),probs=levelUp);
+            yLower[] <- quantile(rowSums(ySimulated),probs=levelLow);
         }
         yForecast[] <- mean(rowSums(ySimulated));
     }
     else{
         if(intervals){
-            yUpper[] <- apply(ySimulated,2,quantile,probs=levelLow);
-            yLower[] <- ifelse(pForecast[1]==1,apply(ySimulated,2,quantile,probs=levelUp),0);
+            yUpper[] <- apply(ySimulated,2,quantile,probs=levelUp);
+            yLower[] <- apply(ySimulated,2,quantile,probs=levelLow);
         }
         yForecast[] <- apply(ySimulated,2,mean);
     }
