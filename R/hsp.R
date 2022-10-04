@@ -171,6 +171,10 @@ hsp <- function(data, h=10, intervals=TRUE, level=0.95, holdout=FALSE,
         yForecast[] <- apply(ySimulated,2,mean);
     }
     
+    if(side=="upper"){
+        yLower[] <- 0;
+    }
+    
     yHoldoutStart <- time(data)[obsInsample]+deltat(data);
     
     if(holdout){
